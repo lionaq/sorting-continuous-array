@@ -1,1 +1,3 @@
-print("Hello World!")
+from mpi4py import MPI
+
+print("Hello World")
