@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NUM 40
+#define NUM 100000
 
 void merge(int array[], int left, int middle, int right);
 void mergesort(int array[], int left, int right);
@@ -33,19 +33,29 @@ int main(int argc, char* argv[]) {
 
     //Setup array with random numbers
     for(i=0; i<NUM; i++){
-        a[i] = rand()%40;
+        a[i] = rand()%NUM;
     }
 
     MPI_Scatter(a, local_size, MPI_INT, local, local_size, MPI_INT, 0, MPI_COMM_WORLD);
+
+    // printf("Rank: %d\n", rank);
+    // printf("a = {");
+    // for(i=0; i<local_size; i++){
+    //     printf("%d",local[i]);
+    //     if(i != local_size-1)
+    //         printf(",");
+    // }
+    // printf("}\n");
     
     if(rank==0){//Parent Process
 
-        printf("a = {");
-        for(i=0; i<NUM; i++){
-            printf("%d",a[i]);
-            printf(",");
-        }
-        printf("}\n");
+        // printf("a = {");
+        // for(i=0; i<NUM; i++){
+        //     printf("%d",a[i]);
+        //     if(i != NUM-1)
+        //         printf(",");
+        // }
+        // printf("}\n");
 
         clock_t begin, end;
         double time_spent;
@@ -74,12 +84,13 @@ int main(int argc, char* argv[]) {
 
         int k;
 
-        printf("a = {");
-        for(i=0; i<NUM; i++){
-            printf("%d",comp[i]);
-            printf(",");
-        }
-        printf("}\n");
+        // printf("a = {");
+        // for(i=0; i<NUM; i++){
+        //     printf("%d",comp[i]);
+        //     if(i != NUM-1)
+        //         printf(",");
+        // }
+        // printf("}\n");
 
         printf("Time spent (Parallel): %f\n", time_spent);
 
