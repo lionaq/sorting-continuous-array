@@ -3,13 +3,14 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NUM 100000
+#define NUM 1000
 
 void merge(int array[], int left, int middle, int right);
 void mergesort(int array[], int left, int right);
 int* mergeArrays(int a[], int b[], int n, int m);
 void p2a(int a[], int* b, int size);
 void l2g(int a[], int b[], int size);
+void displayArr(int a[], int size);
 
 int main(int argc, char* argv[]) {
     int i, a_size = NUM, local_size;
@@ -32,30 +33,20 @@ int main(int argc, char* argv[]) {
     srand(time(NULL));
 
     //Setup array with random numbers
-    for(i=0; i<NUM; i++){
-        a[i] = rand()%NUM;
+    if(rank == 0){
+        for(i=0; i<NUM; i++){
+            a[i] = rand()%NUM;
+        }
     }
 
     MPI_Scatter(a, local_size, MPI_INT, local, local_size, MPI_INT, 0, MPI_COMM_WORLD);
 
-    // printf("Rank: %d\n", rank);
-    // printf("a = {");
-    // for(i=0; i<local_size; i++){
-    //     printf("%d",local[i]);
-    //     if(i != local_size-1)
-    //         printf(",");
-    // }
-    // printf("}\n");
+
+    //displayArr(local, local_size);
     
     if(rank==0){//Parent Process
 
-        // printf("a = {");
-        // for(i=0; i<NUM; i++){
-        //     printf("%d",a[i]);
-        //     if(i != NUM-1)
-        //         printf(",");
-        // }
-        // printf("}\n");
+        //displayArr(a, NUM);
 
         clock_t begin, end;
         double time_spent;
@@ -84,13 +75,7 @@ int main(int argc, char* argv[]) {
 
         int k;
 
-        // printf("a = {");
-        // for(i=0; i<NUM; i++){
-        //     printf("%d",comp[i]);
-        //     if(i != NUM-1)
-        //         printf(",");
-        // }
-        // printf("}\n");
+        // displayArr(global, NUM);
 
         printf("Time spent (Parallel): %f\n", time_spent);
 
@@ -101,6 +86,7 @@ int main(int argc, char* argv[]) {
         end = clock();
         time_spent=(double)(end-begin)/CLOCKS_PER_SEC;
         printf("Time spent (Non-Parallel): %f\n", time_spent);
+
     }
     else{//child process
         //sequential mergesort the given array from scatter
@@ -110,7 +96,6 @@ int main(int argc, char* argv[]) {
         MPI_Send(local, local_size, MPI_INT, 0, 0, MPI_COMM_WORLD);
 
     }
-
     MPI_Finalize();
 
 }
@@ -201,3 +186,12 @@ void l2g(int a[], int b[], int size) {
     }
 }
 
+void displayArr(int a[], int size){
+    printf("a = {");
+    for(int i=0; i<size; i++){
+        printf("%d",a[i]);
+        if(i != size-1)
+            printf(",");
+    }
+    printf("}\n");
+}
