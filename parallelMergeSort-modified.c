@@ -7,8 +7,9 @@
 
 /* 
     To better understand this algorithm, think about a chasing light pattern (https://www.youtube.com/watch?v=oDlwtnct8ME)
-    The first 2 seconds in the video is exactly how the algorithm would work, the first set of turned on lights would sort,
-    then after they're done sorting it transitions over to the second set of turned on lights and sort once again. 
+    The first 2 seconds in the video is exactly how the algorithm would work, the first set of turned on lights would pair
+    with one another and sort, then after they're done sorting it transitions over to the second set of turned on lights 
+    which would pair and sort once again. 
 
     This is done so large numbers from p0 would "bubble" up to pn. It would do all this until the numbers are sorted 
     in increasing order from p0 to pn.
@@ -38,7 +39,7 @@ int main(int argc, char* argv[]) {
         printf("Even Number of Processors Only! (or 1 processor if odd)\n");
         return 1;
     }
-    
+
     local_size = NUM/numtasks;
 
     //Local array for every process
@@ -56,7 +57,7 @@ int main(int argc, char* argv[]) {
         buff[1] = 0;
         buff[2] = 0;
 
-        while(buff[1] == 0){                      // p1*, p2, p3*, p4
+        while(buff[1] == 0){                      // p1*, p2, p3*, p4 ; pair and sort
             if(rank % 2 == 0){ // even
                 sendForward(buff, local, local_size, rank, 1, Stat);
             }
@@ -65,7 +66,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        if(rank != 0 && rank != numtasks - 1){  // p1, p2*, p3, p4*
+        if(rank != 0 && rank != numtasks - 1){  // p1, p2*, p3, p4* ; pair and sort
             while(buff[2] == 0){
                 if(rank % 2 != 0){//Odd
                     sendForward(buff, local, local_size, rank, 2, Stat);
