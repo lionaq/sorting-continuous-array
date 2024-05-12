@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NUM 20
+#define NUM 100
 
 void swap(int* a, int* b);
 void heapify(int arr[], int N, int i);
@@ -41,8 +41,9 @@ int main(int argc, char* argv[]) {
     heapSort(local, local_size); //will be replaced with an in place sorting algorithm
 
     for(int i = 0; i < numtasks/2; i++){
-
-        MPI_Barrier(MPI_COMM_WORLD);
+        
+        buff[1] = 0;
+        buff[2] = 0;
 
         while(buff[1] == 0){
             if(rank % 2 == 0){ // even
@@ -52,8 +53,6 @@ int main(int argc, char* argv[]) {
                 recvBackward(buff, local, local_size, rank, 1, Stat);
             }
         }
-
-        MPI_Barrier(MPI_COMM_WORLD);
 
         if(rank != 0 && rank != numtasks - 1){
             while(buff[2] == 0){
@@ -65,8 +64,7 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
-        buff[1] = 0;
-        buff[2] = 0;
+
     }
     printf("RANK %d Completed ", rank);displayArr(local,local_size);
     MPI_Finalize();
