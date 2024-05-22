@@ -16,8 +16,10 @@
 
  */
 
-void sendRight(int buff[], int* local, int local_size, int rank, int bOffset, MPI_Status Stat);
-void recvLeft(int buff[], int* local, int local_size, int rank, int bOffset, MPI_Status Stat);
+void sendAndRecvRight(int buff[], int* local, int local_size, int rank, int bOffset, MPI_Status Stat);
+void compareAndSwapSort_Send(int buff[], int* local, int local_size, int rank, int bOffset, MPI_Status Stat);
+
+void compareAndSwapSort_Recvd(int buff[], int* local, int local_size, int bOffset);
 
 void swap(int* a, int* b);
 void heapify(int arr[], int N, int i);
@@ -67,20 +69,26 @@ int main(int argc, char* argv[]) {
         //compare and swap first set until sorted
         while(buff[1] == 0){                      // p1*, p2, p3*, p4 ; pair and sort
             if(rank % 2 == 0){ // even
-                sendRight(buff, local, local_size, rank, 1, Stat);
+                sendAndRecvRight(buff, local, local_size, rank, 1, Stat);
+                compareAndSwapSort_Recvd(buff, local, local_size, 1);
             }
             if(rank % 2 != 0){ // odd
-                recvLeft(buff, local, local_size, rank, 1, Stat);
+                buff[0] = local[local_size-1];
+                MPI_Recv(buff, 3, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, &Stat);
+                compareAndSwapSort_Send(buff, local, local_size, rank, 1, Stat);
             }
         }
 
         if(rank != 0 && rank != numtasks - 1){  // p1, p2*, p3, p4* ; pair and sort
             while(buff[2] == 0){ //compare and swap second set until sorted
                 if(rank % 2 != 0){//Odd
-                    sendRight(buff, local, local_size, rank, 2, Stat);
+                    sendAndRecvRight(buff, local, local_size, rank, 2, Stat);
+                    compareAndSwapSort_Recvd(buff, local, local_size, 2);
                 }
                 if(rank % 2 == 0){ //Even
-                    recvLeft(buff, local, local_size, rank, 2, Stat);
+                    buff[0] = local[local_size-1];
+                    MPI_Recv(buff, 3, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, &Stat);
+                    compareAndSwapSort_Send(buff, local, local_size, rank, 2, Stat);
                 }
             }
         }
@@ -88,27 +96,27 @@ int main(int argc, char* argv[]) {
     }
     end = clock();
     time_spent=(double)(end-begin)/CLOCKS_PER_SEC;
-    printf("Rank %d Time spent (Parallel): %f\n", rank, time_spent);displayArr(local,local_size); //sorted from p0 to pn
+    printf("Rank %d Time spent (Parallel): %f ", rank, time_spent);displayArr(local,local_size); //sorted from p0 to pn
     fflush(stdin);
 
     MPI_Finalize();
 }
 
-void sendRight(int buff[], int* local, int local_size, int rank, int bOffset, MPI_Status Stat){
-    int temp;
+void sendAndRecvRight(int buff[], int* local, int local_size, int rank, int bOffset, MPI_Status Stat){
     buff[0] = local[local_size-1];
     MPI_Send(buff, 3, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
     MPI_Recv(buff, 3, MPI_INT, rank + 1, 1, MPI_COMM_WORLD, &Stat);
+}
+
+void compareAndSwapSort_Recvd(int buff[], int* local, int local_size, int bOffset){
     if(buff[bOffset] == 0){
         local[local_size-1] = buff[0];
         heapSort(local, local_size);
     }
 }
 
-void recvLeft(int buff[], int* local, int local_size, int rank, int bOffset, MPI_Status Stat){
+void compareAndSwapSort_Send(int buff[], int* local, int local_size, int rank, int bOffset, MPI_Status Stat){
     int temp;
-    buff[0] = local[local_size-1];
-    MPI_Recv(buff, 3, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, &Stat);
     if(buff[0] > local[0]){ //swap
         temp = local[0];
         local[0] = buff[0];
